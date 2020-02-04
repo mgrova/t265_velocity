@@ -13,7 +13,7 @@ int main(int _argc , char **_argv){
     if (!estimator.init())
         return 0;
 
-    ros::Rate r(10); // set 100 Hz 
+    ros::Rate r(50); // set 100 Hz 
 
     auto t0 = std::chrono::system_clock::now();
     while(ros::ok()){
@@ -26,13 +26,13 @@ int main(int _argc , char **_argv){
         
         Eigen::Vector3f velocity = estimator.estimateVelocity(prev,curr,incT);
         
-        std::cout << "Current position: " << curr[0] << " " << curr[1] << " " << curr[2] << std::endl; 
+        // std::cout << "Current position: " << curr[0] << " " << curr[1] << " " << curr[2] << std::endl; 
         // std::cout << "Previous position: " << prev[0] << " " << prev[1] << " " << prev[2] << std::endl; 
         // std::cout << "Time increment: " << incT << std::endl;
-        std::cout << "Velocity estimated: " << velocity[0] << " " << velocity[1] << " " << velocity[2] << std::endl;
+        // std::cout << "Velocity estimated: " << velocity[0] << " " << velocity[1] << " " << velocity[2] << std::endl;
 
         estimator.publishROS(estimator.publisherVelocity() , velocity);
-        
+
         t0 = t1;
         r.sleep();
     }

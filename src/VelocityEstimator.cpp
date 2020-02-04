@@ -64,9 +64,9 @@ void VelocityEstimator::callbackPose(const nav_msgs::Odometry::ConstPtr& _msg){
         prevPosition_ = currPosition_;
 
     Eigen::Vector3f position;
-    position[0] = _msg->pose.pose.position.x; 
-    position[1] = _msg->pose.pose.position.y; 
-    position[2] = _msg->pose.pose.position.z; 
+    position[0] =   _msg->pose.pose.position.x; 
+    position[1] = - _msg->pose.pose.position.y; 
+    position[2] =   _msg->pose.pose.position.z; 
 
     //transformReferenceFrame(position,currPosition_);
     currPosition_ = position; // 666 must apply tranformation to UAV reference frame
