@@ -3,17 +3,17 @@ project(t265_velocity)
 
 set(CMAKE_CXX_STANDARD 11)
 
-find_package(catkin REQUIRED roscpp geometry_msgs sensor_msgs)
+find_package(catkin REQUIRED roscpp geometry_msgs sensor_msgs nav_msgs)
 if(${catkin_FOUND})
 	catkin_package(
-		CATKIN_DEPENDS roscpp geometry_msgs sensor_msgs
+		CATKIN_DEPENDS roscpp geometry_msgs sensor_msgs nav_msgs
 		INCLUDE_DIRS include
 	)
 endif(${catkin_FOUND})
 
 find_package(Eigen3 REQUIRED)
 
-set(SOURCE_FILES src/main.cpp )
+set(SOURCE_FILES src/main.cpp src/VelocityEstimator.cpp include/t265_velocity/VelocityEstimator.h)
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/include) 
