@@ -12,9 +12,6 @@ if(${catkin_FOUND})
 endif(${catkin_FOUND})
 
 find_package(Eigen3 REQUIRED)
-if(${Eigen3_FOUND})
-  target_link_libraries(${PROJECT_NAME} PUBLIC Eigen3::Eigen)
-endif()
 
 set(SOURCE_FILES src/main.cpp )
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
@@ -26,3 +23,7 @@ if(${catkin_FOUND})
 	target_link_libraries(${PROJECT_NAME} LINK_PUBLIC ${catkin_LIBRARIES} )
 	add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 endif(${catkin_FOUND})
+
+if(${Eigen3_FOUND})
+	target_include_directories(${PROJECT_NAME} PUBLIC "/usr/include/eigen3")
+endif()
