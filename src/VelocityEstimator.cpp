@@ -22,11 +22,13 @@
 #include <t265_velocity/VelocityEstimator.h>
 
 bool VelocityEstimator::init(){
-        // Extrinsics camera parameters
-    Eigen::Vector3f c_t_uav;
-    Eigen::Matrix3f c_R_uav;
+    // Extrinsics camera parameters
+    // uav_T_c = [c_R_uav c_t_uav ;
+    //             [000]     1    ]
+    Eigen::Vector3f c_t_uav(0.2 , 0.0 , -0.22);  //666 units in meters.
+    Eigen::Matrix3f c_R_uav =Eigen::Matrix3f::Identity();
 
-    Eigen::Matrix4f uav_T_c; //666    
+    Eigen::Matrix4f uav_T_c; 
     uav_T_c.setIdentity();  
     uav_T_c.block<3,3>(0,0) = c_R_uav;
     uav_T_c.block<3,1>(0,3) = c_t_uav;
@@ -60,7 +62,7 @@ ros::Publisher VelocityEstimator::publisherVelocity(){
 
 void VelocityEstimator::publishROS(ros::Publisher _pub, Eigen::Vector3f _data){
     geometry_msgs::TwistStamped estVelocity;
-    estVelocity.header.frame_id = "camera_link";  // 666
+    estVelocity.header.frame_id = "base_link";  // 666
     estVelocity.header.stamp=ros::Time::now();
     estVelocity.twist.linear.x = _data[0];
     estVelocity.twist.linear.y = _data[1];
@@ -73,9 +75,15 @@ void VelocityEstimator::publishROS(ros::Publisher _pub, Eigen::Vector3f _data){
 }
 
 bool VelocityEstimator::transformReferenceFrame(Eigen::Vector3f _cameraPosition, Eigen::Vector3f &_uavPosition){
+    Eigen::Vector4f normUAVPosition;
+    Eigen::Vector4f normCameraPosition(_cameraPosition[0],_cameraPosition[1],_cameraPosition[2],1);
+
     // Transform position from camera frame to UAV frame
+    normUAVPosition = uavTc_ * normCameraPosition;
 
+    _uavPosition = Eigen::Vector3f(normUAVPosition[0] , normUAVPosition[1] , normUAVPosition[2]);
 
+    return true;
 }
 
 void VelocityEstimator::callbackPose(const nav_msgs::Odometry::ConstPtr& _msg){
@@ -84,11 +92,11 @@ void VelocityEstimator::callbackPose(const nav_msgs::Odometry::ConstPtr& _msg){
         prevPosition_ = currPosition_;
 
     Eigen::Vector3f position;
-    position[0] =   _msg->pose.pose.position.x; 
-    position[1] = - _msg->pose.pose.position.y; 
-    position[2] =   _msg->pose.pose.position.z; 
+    position[0] =   _msg->pose.pose.position.x; //  x_cam = x_uav
+    position[1] = - _msg->pose.pose.position.y; // -y_cam = y_uav
+    position[2] =   _msg->pose.pose.position.z; //  z_cam = z_uav
 
-    //transformReferenceFrame(position,currPosition_);
+    transformReferenceFrame(position,currPosition_);
     currPosition_ = position; // 666 must apply tranformation to UAV reference frame
 
     return;
