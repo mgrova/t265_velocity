@@ -35,7 +35,7 @@ bool VelocityEstimator::init(){
 
     setTransformationMatrix(uav_T_c);
     
-    pubVel_ = nh_.advertise<geometry_msgs::TwistStamped>("/velocity_estimated", 1);
+    pubVel_ = nh_.advertise<geometry_msgs::TwistStamped>("/external_estimated/velocity", 1);
     subPose_ = nh_.subscribe("/camera/odom/sample", 1, &VelocityEstimator::callbackPose, this);        
     
     return true;
