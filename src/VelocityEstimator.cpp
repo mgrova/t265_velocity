@@ -25,7 +25,7 @@ bool VelocityEstimator::init(){
     // Extrinsics camera parameters
     // uav_T_c = [c_R_uav c_t_uav ;
     //             [000]     1    ]
-    Eigen::Vector3f c_t_uav(0.2 , 0.0 , -0.22);  //666 units in meters.
+    Eigen::Vector3f c_t_uav(0.08 , 0.0 , -0.18);  //666 units in meters.
     Eigen::Matrix3f c_R_uav =Eigen::Matrix3f::Identity();
 
     Eigen::Matrix4f uav_T_c; 
