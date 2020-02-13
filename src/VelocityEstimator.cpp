@@ -20,6 +20,7 @@
 //---------------------------------------------------------------------------------------------------------------------
 
 #include <t265_velocity/VelocityEstimator.h>
+#include <geometry_msgs/PoseStamped.h>
 
 bool VelocityEstimator::init(){
     // Extrinsics camera parameters
@@ -35,6 +36,7 @@ bool VelocityEstimator::init(){
 
     setTransformationMatrix(uav_T_c);
     
+	pubPose_ = nh_.advertise<geometry_msgs::PoseStamped>("/external_estimated/position", 1);
     pubVel_ = nh_.advertise<geometry_msgs::TwistStamped>("/external_estimated/velocity", 1);
     subPose_ = nh_.subscribe("/camera/odom/sample", 1, &VelocityEstimator::callbackPose, this);        
     
@@ -61,13 +63,21 @@ ros::Publisher VelocityEstimator::publisherVelocity(){
 
 
 void VelocityEstimator::publishROS(ros::Publisher _pub, Eigen::Vector3f _data){
-    geometry_msgs::TwistStamped estVelocity;
-    estVelocity.header.frame_id = "base_link";  // 666
-    estVelocity.header.stamp=ros::Time::now();
+   	geometry_msgs::PoseStamped msgLocalPosition;
+  	msgLocalPosition.header.stamp = ros::Time::now();;
+   	msgLocalPosition.header.frame_id = "local_NEU";
+   	msgLocalPosition.pose.position.x = currPosition_[0];
+    msgLocalPosition.pose.position.y = currPosition_[1];
+    msgLocalPosition.pose.position.z = currPosition_[2];
+
+	geometry_msgs::TwistStamped estVelocity;
+    estVelocity.header.frame_id = "local_NEU";  // 666
+    estVelocity.header.stamp = msgLocalPosition.header.stamp;
     estVelocity.twist.linear.x = _data[0];
     estVelocity.twist.linear.y = _data[1];
     estVelocity.twist.linear.z = _data[2];
-
+	
+	pubPose_.publish(msgLocalPosition);
     _pub.publish(estVelocity);
 
     return;
@@ -98,6 +108,8 @@ void VelocityEstimator::callbackPose(const nav_msgs::Odometry::ConstPtr& _msg){
 
     transformReferenceFrame(position,currPosition_);
     currPosition_ = position; // 666 must apply tranformation to UAV reference frame
+	
+	
 
     return;
 }

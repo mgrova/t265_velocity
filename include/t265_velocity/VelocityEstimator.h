@@ -54,7 +54,7 @@ private:
     
     ros::NodeHandle nh_;
     ros::Subscriber subPose_;
-    ros::Publisher pubVel_;
+    ros::Publisher pubVel_, pubPose_;
 
 
 };
