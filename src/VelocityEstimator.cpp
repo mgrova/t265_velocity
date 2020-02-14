@@ -37,25 +37,37 @@ bool VelocityEstimator::init(){
     setTransformationMatrix(uav_T_c);
     
 	pubPose_ = nh_.advertise<geometry_msgs::PoseStamped>("/external_estimated/position", 1);
-    pubVel_ = nh_.advertise<geometry_msgs::TwistStamped>("/external_estimated/velocity", 1);
-    subPose_ = nh_.subscribe("/camera/odom/sample", 1, &VelocityEstimator::callbackPose, this);        
+    pubVelEstimat_ = nh_.advertise<geometry_msgs::TwistStamped>("/external_estimated/velocity", 1);
+    pubVelCamera_  = nh_.advertise<geometry_msgs::TwistStamped>("/t265/velocity", 1);
+    subPose_ = nh_.subscribe("/camera/odom/sample", 1, &VelocityEstimator::callbackOdom, this);        
     
     return true;
 }
 
 
-void VelocityEstimator::callbackPose(const nav_msgs::Odometry::ConstPtr& _msg){
+void VelocityEstimator::callbackOdom(const nav_msgs::Odometry::ConstPtr& _msg){
 
     if (!currPosition_.isZero())
         prevPosition_ = currPosition_;
 
     Eigen::Vector3f position;
     position[0] =   _msg->pose.pose.position.x; //  x_cam = x_uav
-    position[1] =   _msg->pose.pose.position.y; // -y_cam = y_uav
+    position[1] = - _msg->pose.pose.position.y; // -y_cam = y_uav
     position[2] =   _msg->pose.pose.position.z; //  z_cam = z_uav
 
-    // transformReferenceFrame(position,currPosition_);
+    geometry_msgs::TwistStamped VelocityCamera;
+    VelocityCamera.header.frame_id = "local_NEU"; 
+    VelocityCamera.header.stamp = ros::Time::now();
+    VelocityCamera.twist.linear.x =   _msg->twist.twist.linear.x;
+    VelocityCamera.twist.linear.y = - _msg->twist.twist.linear.y;
+    VelocityCamera.twist.linear.z =   _msg->twist.twist.linear.z;
+
+    pubVelCamera_.publish(VelocityCamera);
+
+    transformReferenceFrame(position,currPosition_);
     currPosition_ = position; 
+    
+    
     return;
 }
 
@@ -74,11 +86,6 @@ Eigen::Vector3f VelocityEstimator::previousPosition(){
     return prevPosition_;
 }
 
-ros::Publisher VelocityEstimator::publisherVelocity(){
-    return pubVel_;
-}
-
-
 void VelocityEstimator::publishROS(){
    	geometry_msgs::PoseStamped positionUAV;
   	positionUAV.header.stamp = ros::Time::now();;
@@ -95,7 +102,7 @@ void VelocityEstimator::publishROS(){
     estVelocityUAV.twist.linear.z = velocity_[2];
 	
 	pubPose_.publish(positionUAV);
-    pubVel_.publish(estVelocityUAV);
+    pubVelEstimat_.publish(estVelocityUAV);
 
     return;
 

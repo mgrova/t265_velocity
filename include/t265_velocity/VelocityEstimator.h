@@ -40,7 +40,6 @@ public:
     bool setTransformationMatrix(Eigen::Matrix4f _T);
     Eigen::Vector3f currentPosition();
     Eigen::Vector3f previousPosition();
-    ros::Publisher publisherVelocity();
     
     bool estimateVelocity(Eigen::Vector3f _prevPosition , Eigen::Vector3f _currPosition, float _incT);
     
@@ -49,7 +48,7 @@ public:
 
 private:
     bool transformReferenceFrame(Eigen::Vector3f _cameraPosition, Eigen::Vector3f &_uavPosition);
-    void callbackPose(const nav_msgs::Odometry::ConstPtr& _msg);
+    void callbackOdom(const nav_msgs::Odometry::ConstPtr& _msg);
 private:
     /// Position and velocity referenced to UAV coordinate system
     Eigen::Vector3f currPosition_ , prevPosition_ , velocity_;
@@ -58,7 +57,7 @@ private:
     
     ros::NodeHandle nh_;
     ros::Subscriber subPose_;
-    ros::Publisher pubVel_, pubPose_;
+    ros::Publisher pubVelCamera_,pubVelEstimat_, pubPose_;
 
 
 };

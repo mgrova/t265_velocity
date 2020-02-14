@@ -32,7 +32,7 @@ int main(int _argc , char **_argv){
     if (!estimator.init())
         return 0;
 
-    std::cout << " Publishing position and velocity from T265 in UAV coordinate system \n";
+    std::cout << " Publishing position and velocity from T265 in UAV coordinate system \n (X = forward ; Y = right ; Z = up)";
     ros::Rate r(50); // set 100 Hz 
     auto t0 = std::chrono::system_clock::now();
     while(ros::ok()){
