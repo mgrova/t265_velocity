@@ -20,7 +20,7 @@
 //---------------------------------------------------------------------------------------------------------------------
 
 #include <t265_velocity/VelocityEstimator.h>
-#include <geometry_msgs/PoseStamped.h>
+
 
 bool VelocityEstimator::init(){
     // Extrinsics camera parameters
@@ -43,6 +43,23 @@ bool VelocityEstimator::init(){
     return true;
 }
 
+
+void VelocityEstimator::callbackPose(const nav_msgs::Odometry::ConstPtr& _msg){
+
+    if (!currPosition_.isZero())
+        prevPosition_ = currPosition_;
+
+    Eigen::Vector3f position;
+    position[0] =   _msg->pose.pose.position.x; //  x_cam = x_uav
+    position[1] =   _msg->pose.pose.position.y; // -y_cam = y_uav
+    position[2] =   _msg->pose.pose.position.z; //  z_cam = z_uav
+
+    // transformReferenceFrame(position,currPosition_);
+    currPosition_ = position; 
+    return;
+}
+
+
 bool VelocityEstimator::setTransformationMatrix(Eigen::Matrix4f _T){
     uavTc_ = _T;
 
@@ -62,23 +79,23 @@ ros::Publisher VelocityEstimator::publisherVelocity(){
 }
 
 
-void VelocityEstimator::publishROS(ros::Publisher _pub, Eigen::Vector3f _data){
-   	geometry_msgs::PoseStamped msgLocalPosition;
-  	msgLocalPosition.header.stamp = ros::Time::now();;
-   	msgLocalPosition.header.frame_id = "local_NEU";
-   	msgLocalPosition.pose.position.x = currPosition_[0];
-    msgLocalPosition.pose.position.y = currPosition_[1];
-    msgLocalPosition.pose.position.z = currPosition_[2];
+void VelocityEstimator::publishROS(){
+   	geometry_msgs::PoseStamped positionUAV;
+  	positionUAV.header.stamp = ros::Time::now();;
+   	positionUAV.header.frame_id = "local_NEU";
+   	positionUAV.pose.position.x = currPosition_[0];
+    positionUAV.pose.position.y = currPosition_[1];
+    positionUAV.pose.position.z = currPosition_[2];
 
-	geometry_msgs::TwistStamped estVelocity;
-    estVelocity.header.frame_id = "local_NEU";  // 666
-    estVelocity.header.stamp = msgLocalPosition.header.stamp;
-    estVelocity.twist.linear.x = _data[0];
-    estVelocity.twist.linear.y = _data[1];
-    estVelocity.twist.linear.z = _data[2];
+	geometry_msgs::TwistStamped estVelocityUAV;
+    estVelocityUAV.header.frame_id = "local_NEU"; 
+    estVelocityUAV.header.stamp = positionUAV.header.stamp;
+    estVelocityUAV.twist.linear.x = velocity_[0];
+    estVelocityUAV.twist.linear.y = velocity_[1];
+    estVelocityUAV.twist.linear.z = velocity_[2];
 	
-	pubPose_.publish(msgLocalPosition);
-    _pub.publish(estVelocity);
+	pubPose_.publish(positionUAV);
+    pubVel_.publish(estVelocityUAV);
 
     return;
 
@@ -96,30 +113,13 @@ bool VelocityEstimator::transformReferenceFrame(Eigen::Vector3f _cameraPosition,
     return true;
 }
 
-void VelocityEstimator::callbackPose(const nav_msgs::Odometry::ConstPtr& _msg){
-
-    if (!currPosition_.isZero())
-        prevPosition_ = currPosition_;
-
-    Eigen::Vector3f position;
-    position[0] =   _msg->pose.pose.position.x; //  x_cam = x_uav
-    position[1] = - _msg->pose.pose.position.y; // -y_cam = y_uav
-    position[2] =   _msg->pose.pose.position.z; //  z_cam = z_uav
-
-    transformReferenceFrame(position,currPosition_);
-    currPosition_ = position; // 666 must apply tranformation to UAV reference frame
-	
-	
-
-    return;
-}
-
-Eigen::Vector3f VelocityEstimator::estimateVelocity(Eigen::Vector3f _prevPosition , Eigen::Vector3f _currPosition, float _incT){
+bool VelocityEstimator::estimateVelocity(Eigen::Vector3f _prevPosition , Eigen::Vector3f _currPosition, float _incT){
     Eigen::Vector3f vel;
 
     vel[0] = (_currPosition[0] - _prevPosition[0]) / _incT;
     vel[1] = (_currPosition[1] - _prevPosition[1]) / _incT;
     vel[2] = (_currPosition[2] - _prevPosition[2]) / _incT;
 
-    return vel;
+    velocity_ = vel;
+    return true;
 }

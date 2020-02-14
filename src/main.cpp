@@ -32,8 +32,8 @@ int main(int _argc , char **_argv){
     if (!estimator.init())
         return 0;
 
+    std::cout << " Publishing position and velocity from T265 in UAV coordinate system \n";
     ros::Rate r(50); // set 100 Hz 
-
     auto t0 = std::chrono::system_clock::now();
     while(ros::ok()){
 
@@ -43,14 +43,9 @@ int main(int _argc , char **_argv){
         auto t1 = std::chrono::system_clock::now();
         float incT = float(std::chrono::duration_cast<std::chrono::milliseconds>(t1-t0).count())/1000.0;
         
-        Eigen::Vector3f velocity = estimator.estimateVelocity(prev,curr,incT);
-        
-        // std::cout << "Current position: " << curr[0] << " " << curr[1] << " " << curr[2] << std::endl; 
-        // std::cout << "Previous position: " << prev[0] << " " << prev[1] << " " << prev[2] << std::endl; 
-        // std::cout << "Time increment: " << incT << std::endl;
-        // std::cout << "Velocity estimated: " << velocity[0] << " " << velocity[1] << " " << velocity[2] << std::endl;
-
-        estimator.publishROS(estimator.publisherVelocity() , velocity);
+        if (estimator.estimateVelocity(prev,curr,incT)){
+            estimator.publishROS();
+        }
 
         t0 = t1;
         r.sleep();

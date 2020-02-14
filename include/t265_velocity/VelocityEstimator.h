@@ -22,6 +22,7 @@
 #include <ros/ros.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/TwistStamped.h>
+#include <geometry_msgs/PoseStamped.h>
 
 #include <Eigen/Eigen>
 
@@ -41,15 +42,18 @@ public:
     Eigen::Vector3f previousPosition();
     ros::Publisher publisherVelocity();
     
-    Eigen::Vector3f estimateVelocity(Eigen::Vector3f _prevPosition , Eigen::Vector3f _currPosition, float _incT);
+    bool estimateVelocity(Eigen::Vector3f _prevPosition , Eigen::Vector3f _currPosition, float _incT);
     
-    void publishROS(ros::Publisher _pub, Eigen::Vector3f _data);
+    /// Publish position and velocity on UAV coordinate system
+    void publishROS();
 
 private:
     bool transformReferenceFrame(Eigen::Vector3f _cameraPosition, Eigen::Vector3f &_uavPosition);
     void callbackPose(const nav_msgs::Odometry::ConstPtr& _msg);
 private:
-    Eigen::Vector3f currPosition_ , prevPosition_;
+    /// Position and velocity referenced to UAV coordinate system
+    Eigen::Vector3f currPosition_ , prevPosition_ , velocity_;
+    // Transformation between camera and UAV coordinate system
     Eigen::Matrix4f uavTc_;
     
     ros::NodeHandle nh_;
